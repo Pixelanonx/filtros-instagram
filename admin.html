@@ -444,8 +444,6 @@
 </div>
 
 <div id="adminPanel" style="display:none;">
-  <!-- Todo tu panel actual -->
-</div>
   <header class="page-header">
     <h1>Panel de administración</h1>
     <p>Administra la marca, los datos bancarios y los productos directamente desde este panel. Los cambios se guardan en la Base de Datos.</p>
@@ -621,6 +619,7 @@
       <button type="button" class="modal-action" onclick="hideModal()">Aceptar</button>
     </div>
   </div>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -648,7 +647,7 @@
         return;
       }
     
-      const { data, error } = await supabase
+      const { data, error } = await window.supabaseClient
         .from("admins")
         .select("password_hash")
         .eq("username", username)
@@ -668,6 +667,7 @@
     
       localStorage.setItem(ADMIN_SESSION_KEY, "true");
       showAdminPanel();
+      await loadData();
     }
     
     function showAdminPanel() {
@@ -1112,10 +1112,14 @@
       window.clearTimeout(modal.dismissTimeout);
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
+   window.addEventListener('DOMContentLoaded', async () => {
       initEventListeners();
-      await loadData();
       resetProductForm();
+    
+      if (localStorage.getItem("admin_logged") === "true") {
+        showAdminPanel();
+        await loadData();
+      }
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
