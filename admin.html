@@ -435,9 +435,21 @@
   </style>
 </head>
 <body>
+  <div id="loginBox">
+  <h2>Iniciar sesión</h2>
+  <input type="text" id="username" placeholder="Usuario">
+  <input type="password" id="password" placeholder="Contraseña">
+  <button id="btnLogin">Ingresar</button>
+  <p id="loginMsg"></p>
+</div>
+
+<div id="adminPanel" style="display:none;">
+  <!-- Todo tu panel actual -->
+</div>
   <header class="page-header">
     <h1>Panel de administración</h1>
     <p>Administra la marca, los datos bancarios y los productos directamente desde este panel. Los cambios se guardan en la Base de Datos.</p>
+    <button onclick="logout()">Cerrar sesión</button>
   </header>
 
   <main class="container">
@@ -616,6 +628,57 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1na2JmZXBhaGxsZHVsdmR0dnFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MDQ3MzYsImV4cCI6MjA5NDQ4MDczNn0.P1z-MWnl6jurJczPG1iOo0mJtRQSMQHs_p7oOPcAdOY';
 
     window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const ADMIN_SESSION_KEY = "admin_logged";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (localStorage.getItem(ADMIN_SESSION_KEY) === "true") {
+        showAdminPanel();
+      }
+    
+      document.getElementById("btnLogin").addEventListener("click", login);
+    });
+    
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const msg = document.getElementById("loginMsg");
+    
+      if (!username || !password) {
+        msg.textContent = "Complete todos los campos.";
+        return;
+      }
+    
+      const { data, error } = await supabase
+        .from("admins")
+        .select("password_hash")
+        .eq("username", username)
+        .single();
+    
+      if (error || !data) {
+        msg.textContent = "Usuario o contraseña incorrectos.";
+        return;
+      }
+    
+      const valid = await bcrypt.compare(password, data.password_hash);
+    
+      if (!valid) {
+        msg.textContent = "Usuario o contraseña incorrectos.";
+        return;
+      }
+    
+      localStorage.setItem(ADMIN_SESSION_KEY, "true");
+      showAdminPanel();
+    }
+    
+    function showAdminPanel() {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("adminPanel").style.display = "block";
+    }
+
+    function logout() {
+      localStorage.removeItem("admin_logged");
+      location.reload();
+    }
 
     const STORAGE_BUCKET_PRODUCTS = 'products';
     const STORAGE_BUCKET_AVATARS = 'avatars';
@@ -1055,6 +1118,7 @@
       resetProductForm();
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 </body>
 </html>
 
