@@ -513,7 +513,7 @@
       <h2>🔐 Acceso Admin</h2>
       <p class="login-sub">Ingresa tus credenciales para continuar</p>
   
-      <input type="text" id="username" placeholder="Usuario" />
+      <input type="text" id="username" placeholder="Usuario" style="text-transform: uppercase;" />
       <input type="password" id="password" placeholder="Contraseña" />
   
       <button id="btnLogin">Ingresar</button>
@@ -711,8 +711,8 @@
 
     document.getElementById("btnLogin").addEventListener("click", login);
 
-    document.getElementById("username").addEventListener("input", (e) => {
-      e.target.value = e.target.value.toUpperCase();
+    usernameInput.addEventListener("input", (e) => {
+      e.target.value = e.target.value.toUpperCase().replace(/\s/g, "");
     });
     
     async function login() {
@@ -766,15 +766,8 @@
         msg.textContent = "Error de login.";
         console.error(err);
       } finally {
-        // 🔥 restaurar botón siempre
         btn.disabled = false;
         btn.textContent = "Ingresar";
-      }
-    }
-    
-      } catch (err) {
-        msg.textContent = "Error de login.";
-        console.error(err);
       }
     }
     
