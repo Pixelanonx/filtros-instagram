@@ -432,23 +432,101 @@
         width: 100%;
       }
     }
+
+    .login-wrapper{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at top left, rgba(212, 92, 153, 0.14), transparent 28%),
+                  radial-gradient(circle at bottom right, rgba(201, 168, 232, 0.18), transparent 28%),
+                  var(--bg);
+    }
+    
+    .login-card{
+      width: min(380px, 92%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      text-align: center;
+    
+      transform: translateY(0);
+      animation: loginIn 0.4s ease;
+    }
+    
+    @keyframes loginIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .login-card h2{
+      margin-bottom: 6px;
+    }
+    
+    .login-sub{
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    
+    .login-card input{
+      width:100%;
+      margin-bottom:12px;
+      border-radius:14px;
+      border:1px solid rgba(107, 95, 115, 0.16);
+      padding:12px 14px;
+      font-size: 0.98rem;
+      transition: 0.2s ease;
+    }
+    
+    .login-card input:focus{
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(212, 92, 153, 0.15);
+    }
+    
+    .login-card button{
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color:white;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 12px 30px rgba(212, 92, 153, 0.18);
+    }
+    
+    #loginMsg{
+      margin-top:10px;
+      font-size:0.9rem;
+      font-weight: 600;
+      min-height: 20px;
+    }
   </style>
 </head>
 <body>
-  <div id="loginBox">
-  <h2>Iniciar sesión</h2>
-  <input type="text" id="username" placeholder="Usuario">
-  <input type="password" id="password" placeholder="Contraseña">
-  <button id="btnLogin">Ingresar</button>
-  <p id="loginMsg"></p>
-</div>
-
-<div id="adminPanel" style="display:none;">
-  <header class="page-header">
-    <h1>Panel de administración</h1>
-    <p>Administra la marca, los datos bancarios y los productos directamente desde este panel. Los cambios se guardan en la Base de Datos.</p>
-    <button onclick="logout()">Cerrar sesión</button>
-  </header>
+  <div id="loginBox" class="login-wrapper">
+    <div class="login-card">
+      <h2>🔐 Acceso Admin</h2>
+      <p class="login-sub">Ingresa tus credenciales para continuar</p>
+  
+      <input type="text" id="username" placeholder="Usuario" />
+      <input type="password" id="password" placeholder="Contraseña" />
+  
+      <button id="btnLogin">Ingresar</button>
+      <p id="loginMsg"></p>
+    </div>
+  </div>
+  
+  <div id="adminPanel" style="display:none;">
+    <header class="page-header">
+      <h1>Panel de administración</h1>
+      <p>Administra la marca, los datos bancarios y los productos directamente desde este panel. Los cambios se guardan en la Base de Datos.</p>
+      <button onclick="logout()">Cerrar sesión</button>
+    </header>
 
   <main class="container">
     <div id="toast" class="message success"></div>
@@ -629,6 +707,8 @@
 
     window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
+    const bcrypt = window.dcodeIO.bcrypt;
+
     document.getElementById("btnLogin").addEventListener("click", login);
     
     async function login() {
@@ -636,31 +716,44 @@
       const password = document.getElementById("password").value;
       const msg = document.getElementById("loginMsg");
     
+      msg.style.color = "#a72d54";
+    
       if (!username || !password) {
-        msg.textContent = "Complete todos los campos.";
+        msg.textContent = "Completa todos los campos.";
         return;
       }
     
-      const { data, error } = await window.supabaseClient
-        .from("admins")
-        .select("password_hash")
-        .eq("username", username)
-        .single();
+      try {
+        const { data, error } = await window.supabaseClient
+          .from("admins")
+          .select("password_hash")
+          .eq("username", username)
+          .single();
     
-      if (error || !data) {
-        msg.textContent = "Usuario o contraseña incorrectos.";
-        return;
+        if (error || !data) {
+          msg.textContent = "Usuario o contraseña incorrectos.";
+          return;
+        }
+    
+        const valid = await bcrypt.compare(password, data.password_hash);
+    
+        if (!valid) {
+          msg.textContent = "Usuario o contraseña incorrectos.";
+          return;
+        }
+    
+        msg.style.color = valid ? "#1f5d39" : "#a72d54";
+        msg.textContent = "Acceso correcto...";
+    
+        setTimeout(() => {
+          showAdminPanel();
+          loadData();
+        }, 500);
+    
+      } catch (err) {
+        msg.textContent = "Error de login.";
+        console.error(err);
       }
-    
-      const valid = await bcrypt.compare(password, data.password_hash);
-    
-      if (!valid) {
-        msg.textContent = "Usuario o contraseña incorrectos.";
-        return;
-      }
-    
-      showAdminPanel();
-      await loadData();
     }
     
     function showAdminPanel() {
