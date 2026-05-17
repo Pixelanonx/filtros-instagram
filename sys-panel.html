@@ -562,6 +562,10 @@
     #togglePassword:hover{
       background: rgba(0,0,0,0.05);
     }
+
+    #adminPanel {
+      min-height: 100vh;
+    }
     
   </style>
 </head>
@@ -760,7 +764,6 @@
       <button type="button" class="modal-action" onclick="hideModal()">Aceptar</button>
     </div>
   </div>
-</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
@@ -849,8 +852,7 @@
       document.getElementById("adminPanel").style.display = "block";
     }
 
-    async function logout() {
-      await window.supabaseClient.auth.signOut();
+    function logout() {
       location.reload();
     }
 
@@ -904,7 +906,7 @@
     function setEditingMode(product = null) {
       const isEditing = !!product;
 
-      dom.editBanner.hidden = !isEditing;
+      dom.editBanner.style.display = isEditing ? 'block' : 'none';
       dom.editBanner.classList.toggle('active', isEditing);
       dom.editBannerText.textContent = isEditing
         ? product?.name
