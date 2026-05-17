@@ -6,6 +6,7 @@
   <title>Panel Admin · Filtros Instagram</title>
   <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/all.min.css">
   <style>
     :root {
       --bg: #f8f4fb;
@@ -505,6 +506,16 @@
       font-weight: 600;
       min-height: 20px;
     }
+
+    #togglePassword {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -513,8 +524,12 @@
       <h2>🔐 Acceso Admin</h2>
       <p class="login-sub">Ingresa tus credenciales para continuar</p>
   
-      <input type="text" id="username" placeholder="Usuario" style="text-transform: uppercase;" />
-      <input type="password" id="password" placeholder="Contraseña" />
+      <input type="text" id="username" placeholder="USUARIO" style="text-transform: uppercase;" />
+      <div style="position:relative;">
+        <input type="password" id="password" placeholder="CONTRASEÑA" />
+      
+        <i id="togglePassword" class="fa-solid fa-eye"></i>
+      </div>
   
       <button id="btnLogin">Ingresar</button>
       <p id="loginMsg"></p>
@@ -525,7 +540,9 @@
     <header class="page-header">
       <h1>Panel de administración</h1>
       <p>Administra la marca, los datos bancarios y los productos directamente desde este panel. Los cambios se guardan en la Base de Datos.</p>
-      <button onclick="logout()">Cerrar sesión</button>
+      <button onclick="logout()">
+         <i class="fa-solid fa-right-from-bracket"></i>Cerrar sesión
+      </button>
     </header>
 
   <main class="container">
@@ -708,11 +725,19 @@
     window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     const bcrypt = window.dcodeIO.bcrypt;
-
+    
     document.getElementById("btnLogin").addEventListener("click", login);
 
-    usernameInput.addEventListener("input", (e) => {
-      e.target.value = e.target.value.toUpperCase().replace(/\s/g, "");
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
+    
+    togglePassword.addEventListener("click", () => {
+      const isHidden = passwordInput.type === "password";
+    
+      passwordInput.type = isHidden ? "text" : "password";
+    
+      togglePassword.classList.toggle("fa-eye");
+      togglePassword.classList.toggle("fa-eye-slash");
     });
     
     async function login() {
@@ -721,7 +746,7 @@
       const msg = document.getElementById("loginMsg");
       const btn = document.getElementById("btnLogin");
     
-      const username = usernameInput.value.trim().toUpperCase();
+      const username = usernameInput.value.trim();
       const password = passwordInput.value;
     
       msg.style.color = "#a72d54";
@@ -1216,7 +1241,24 @@
     window.addEventListener("DOMContentLoaded", async () => {
       initEventListeners();
       resetProductForm();
+
+     const usernameInput = document.getElementById("username");
+
+     usernameInput.addEventListener("input", (e) => {
+      e.target.value = e.target.value.toUpperCase().replace(/\s/g, "");
+     });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
     
+      const loginBox = document.getElementById("loginBox");
+      const isLoginVisible = loginBox.offsetParent !== null;
+    
+      if (isLoginVisible) {
+        login();
+      }
+    });
+          
       const { data } = await window.supabaseClient.auth.getSession();
     
       if (data.session) {
